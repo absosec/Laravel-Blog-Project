@@ -18,7 +18,7 @@ class AuthController extends Controller
     public function loginPost(Request $request)
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            toastr()->success('Tekrardan hosgeldiniz ' . Auth::user()->name);
+            toastr()->success('Welcome back ' . Auth::user()->name);
             return redirect()->route('admin.dashboard');
         }
         return redirect()->route('admin.login')->withErrors('Email or password is incorrect!');

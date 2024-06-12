@@ -25,25 +25,27 @@ class ArticleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'min:3',
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+            'title' => 'required|min:3',
+            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'category_id' => 'required|integer|exists:categories,id',
+            'content' => 'required|string|min:10'
         ]);
-
+    
         $article = new Article();
-        $article->title = $request->title;
+        $article->title = e($request->title); // Using e() to escape any HTML entities
         $article->category_id = $request->category_id;
-        $article->content = $request->content;
+        $article->content = e($request->content);
         $article->slug = str_slug($request->title);
-
+    
         if ($request->hasFile('image')) {
-            $imageName = str_slug($request->title) . '.' . $request->image->getClientOriginalExtension(); //vulnerable to arbitrary file upload & file overriding
+            $imageName = uniqid() . '.' . $request->image->getClientOriginalExtension(); // Generates a unique filename
             $request->image->move(public_path('uploads'), $imageName);
             $article->image = 'uploads/' . $imageName;
         }
         $article->save();
         toastr()->success('Article created successfully');
         return redirect()->route('admin.articles.index');
-    }
+    }    
 
     public function show($id)
     {
@@ -60,25 +62,28 @@ class ArticleController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'title' => 'min:3',
-            'image' => 'image|mimes:jpeg,png,jpg|max:2048'
+            'title' => 'required|min:3',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'category_id' => 'required|integer|exists:categories,id',
+            'content' => 'required|string|min:10'
         ]);
-
+    
         $article = Article::findOrFail($id);
-        $article->title = $request->title;
+        $article->title = e($request->title); // Using e() to escape any HTML entities
         $article->category_id = $request->category_id;
-        $article->content = $request->content;
+        $article->content = e($request->content);
         $article->slug = str_slug($request->title);
-
+    
         if ($request->hasFile('image')) {
-            $imageName = str_slug($request->title) . '.' . $request->image->getClientOriginalExtension(); //vulnerable to arbitrary file upload & file overriding
+            // Generate a unique filename to avoid file overwriting
+            $imageName = uniqid() . '.' . $request->image->getClientOriginalExtension(); 
             $request->image->move(public_path('uploads'), $imageName);
             $article->image = 'uploads/' . $imageName;
         }
         $article->save();
         toastr()->success('Article updated successfully!');
         return redirect()->route('admin.articles.index');
-    }
+    }    
 
     public function destroy($id)
     {
